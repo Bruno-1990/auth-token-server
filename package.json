@@ -1,14 +1,13 @@
 {
   "name": "auth-token-server",
   "version": "1.0.0",
+  "description": "Servidor para disponibilizar certificado p12 para autenticação no SERPRO",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "https": "^1.0.0",
-    "fs": "^0.0.1-security",
-    "querystring": "^0.2.1"
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2"
   }
 }

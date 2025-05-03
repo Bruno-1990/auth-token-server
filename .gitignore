@@ -1,14 +1,3 @@
-# Ignorar variáveis de ambiente
+certificado.p12
 .env
-
-# Ignorar certificados e chaves
-*.pfx
-*.p12
-*.pem
-*.key
-
-# Ignorar node_modules
-node_modules/
-
-# Ignorar arquivos de log
-*.log
+node_modules
