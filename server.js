@@ -8,7 +8,13 @@ const app = express();
 app.use(express.json());
 
 app.post('/get-token', (req, res) => {
-  const cert = fs.readFileSync('./certificado.p12');
+  let cert;
+  try {
+    cert = fs.readFileSync('./certificado.p12');
+  } catch (error) {
+    return res.status(500).send('Certificado não encontrado.');
+  }
+
   const certPassword = process.env.CERT_PASSWORD;
 
   const postData = querystring.stringify({
