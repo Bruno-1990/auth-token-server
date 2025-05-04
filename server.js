@@ -7,13 +7,17 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
-// Tenta carregar o certificado
+// Tenta carregar o certificado a partir da variável de ambiente
 let certificado;
 try {
-  certificado = fs.readFileSync('certificado.p12');
-  console.log('Certificado carregado com sucesso.');
+  if (process.env.CERTIFICADO_P12_BASE64) {
+    certificado = Buffer.from(process.env.CERTIFICADO_P12_BASE64, 'base64');
+    console.log('Certificado carregado com sucesso a partir da variável de ambiente.');
+  } else {
+    throw new Error('Variável CERTIFICADO_P12_BASE64 não encontrada.');
+  }
 } catch (error) {
-  console.error('Erro ao carregar o certificado.p12:', error.message);
+  console.error('Erro ao carregar o certificado:', error.message);
   certificado = null;
 }
 
@@ -25,7 +29,7 @@ const authorizationBase64 = process.env.AUTHORIZATION_BASE64;
 app.post('/get-token', (req, res) => {
   try {
     if (!certificado) {
-      return res.status(500).json({ error: 'Certificado não encontrado no servidor.' });
+      return res.status(500).json({ error: 'Certificado não carregado.' });
     }
 
     const payload = { auth: true };
