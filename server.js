@@ -1,23 +1,22 @@
 const express = require('express');
-const fs = require('fs');
-const https = require('https');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
 app.use(express.json());
 
-// Tenta carregar o certificado a partir da variável de ambiente
+// Carregar o certificado a partir da variável de ambiente
 let certificado;
 try {
   if (process.env.CERTIFICADO_P12_BASE64) {
     certificado = Buffer.from(process.env.CERTIFICADO_P12_BASE64, 'base64');
-    console.log('Certificado carregado com sucesso a partir da variável de ambiente.');
+    console.log('Certificado carregado do Base64.');
   } else {
-    throw new Error('Variável CERTIFICADO_P12_BASE64 não encontrada.');
+    console.error('Variável CERTIFICADO_P12_BASE64 não encontrada.');
+    certificado = null;
   }
 } catch (error) {
-  console.error('Erro ao carregar o certificado:', error.message);
+  console.error('Erro ao carregar o certificado Base64:', error.message);
   certificado = null;
 }
 
@@ -29,7 +28,7 @@ const authorizationBase64 = process.env.AUTHORIZATION_BASE64;
 app.post('/get-token', (req, res) => {
   try {
     if (!certificado) {
-      return res.status(500).json({ error: 'Certificado não carregado.' });
+      return res.status(500).json({ error: 'Certificado não carregado no servidor.' });
     }
 
     const payload = { auth: true };
