@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const fs = require('fs');
 
 const app = express();
 app.use(express.json());
@@ -33,6 +34,7 @@ app.post('/get-token', (req, res) => {
 
     const payload = { auth: true };
     const token = jwt.sign(payload, 'chave-secreta', { expiresIn: '1h' });
+
     res.json({ token });
   } catch (error) {
     res.status(500).json({ error: error.message });
