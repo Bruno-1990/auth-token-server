@@ -1,7 +1,8 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
 const fs = require('fs');
+const https = require('https');
+const axios = require('axios');
+require('dotenv').config();
 
 const app = express();
 app.use(express.json());
@@ -25,19 +26,44 @@ try {
 const certPassword = process.env.CERT_PASSWORD;
 const authorizationBase64 = process.env.AUTHORIZATION_BASE64;
 
-// Rota principal
-app.post('/get-token', (req, res) => {
+// Rota principal corrigida
+app.post('/get-token', async (req, res) => {
   try {
     if (!certificado) {
       return res.status(500).json({ error: 'Certificado não carregado no servidor.' });
     }
 
-    const payload = { auth: true };
-    const token = jwt.sign(payload, 'chave-secreta', { expiresIn: '1h' });
+    // Salvar o certificado temporariamente (em memória ou em /tmp)
+    const tempCertPath = '/tmp/certificado.p12';
+    fs.writeFileSync(tempCertPath, certificado);
 
-    res.json({ token });
+    // Criar o agent HTTPS usando o certificado
+    const httpsAgent = new https.Agent({
+      pfx: fs.readFileSync(tempCertPath),
+      passphrase: certPassword,
+    });
+
+    // Fazer o POST para o SERPRO
+    const response = await axios.post(
+      'https://autenticacao.sapi.serpro.gov.br/authenticate',
+      'grant_type=client_credentials',
+      {
+        httpsAgent,
+        headers: {
+          'Authorization': authorizationBase64,
+          'Role-Type': 'TERCEIROS',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
+
+    // Retornar o token real do SERPRO
+    res.json({
+      token: response.data.access_token,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Erro ao obter token do SERPRO:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Erro ao obter token do SERPRO' });
   }
 });
 
