@@ -25,19 +25,21 @@ try {
 // Configurações
 const certPassword = process.env.CERT_PASSWORD;
 const authorizationBase64 = process.env.AUTHORIZATION_BASE64;
+const PORT = process.env.PORT || 3000;
 
-// Rota principal corrigida
+// Rota principal
 app.post('/get-token', async (req, res) => {
-  try {
-    if (!certificado) {
-      return res.status(500).json({ error: 'Certificado não carregado no servidor.' });
-    }
+  if (!certificado) {
+    return res.status(500).json({ error: 'Certificado não carregado no servidor.' });
+  }
 
-    // Salvar o certificado temporariamente (em memória ou em /tmp)
-    const tempCertPath = '/tmp/certificado.p12';
+  const tempCertPath = '/tmp/certificado.p12';
+
+  try {
+    // Salvar certificado temporariamente
     fs.writeFileSync(tempCertPath, certificado);
 
-    // Criar o agent HTTPS usando o certificado
+    // Criar o HTTPS Agent
     const httpsAgent = new https.Agent({
       pfx: fs.readFileSync(tempCertPath),
       passphrase: certPassword,
@@ -50,25 +52,36 @@ app.post('/get-token', async (req, res) => {
       {
         httpsAgent,
         headers: {
-          'Authorization': authorizationBase64,
+          'Authorization': `Basic ${authorizationBase64}`,
           'Role-Type': 'TERCEIROS',
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       }
     );
 
-    // Retornar o token real do SERPRO
-    res.json({
-      token: response.data.access_token,
+    // Retornar o token recebido
+    return res.status(200).json({
+      access_token: response.data.access_token,
+      token_type: response.data.token_type,
+      expires_in: response.data.expires_in,
     });
+
   } catch (error) {
     console.error('Erro ao obter token do SERPRO:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Erro ao obter token do SERPRO' });
+    return res.status(error.response?.status || 500).json({
+      error: 'Erro ao obter token do SERPRO',
+      details: error.response?.data || error.message,
+    });
+  } finally {
+    // Limpar o arquivo temporário
+    if (fs.existsSync(tempCertPath)) {
+      fs.unlinkSync(tempCertPath);
+      console.log('Certificado temporário removido.');
+    }
   }
 });
 
-// Porta dinâmica para Railway
-const PORT = process.env.PORT || 3000;
+// Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
