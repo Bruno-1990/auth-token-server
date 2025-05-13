@@ -1,0 +1,14 @@
+{
+  "name": "auth-token-server",
+  "version": "1.0.0",
+  "description": "Autenticação SERPRO com certificado e variáveis do Railway",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.7",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.4"
+  }
+}
