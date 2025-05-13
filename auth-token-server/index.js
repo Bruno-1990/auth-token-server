@@ -8,6 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/serpro/token', async (req, res) => {
+  console.log('✅ Rota /serpro/token acessada');
   try {
     const certBase64 = process.env.CERTIFICADO_P12_BASE64;
     const certPassword = process.env.CERT_PASSWORD;
